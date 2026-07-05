@@ -1,0 +1,7 @@
+venv/
+.venv/
+__pycache__/
+*.pyc
+expenses.db
+.env
+ngrok-stable-linux-amd64.zip

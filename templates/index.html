@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+{% block title %}Dashboard - Expense Tracker{% endblock %}
+
+{% block content %}
+<!-- Row 1: Total, Filter, Chart -->
+<div class="row g-4 mb-4">
+    <!-- Total Card -->
+    <div class="col-12 col-md-4 col-lg-3">
+        <div class="card p-3 h-100">
+            <div class="card-body text-center">
+                <span class="text-muted small text-uppercase">Total for {{ month_filter }}</span>
+                <h2 class="fw-bold text-primary mt-2">₹{{ "%.2f"|format(total) }}</h2>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Card -->
+    <div class="col-12 col-md-4 col-lg-3">
+        <div class="card p-3 h-100">
+            <form method="get" class="d-flex flex-column gap-2">
+                <div>
+                    <label class="form-label fw-semibold mb-1">Month</label>
+                    <input type="month" name="month" value="{{ month_filter }}" class="form-control form-control-sm" onchange="this.form.submit()">
+                </div>
+                <div>
+                    <label class="form-label fw-semibold mb-1">Category</label>
+                    <select name="category" class="form-select form-select-sm" onchange="this.form.submit()">
+                        <option value="All" {% if category_filter == 'All' %}selected{% endif %}>All</option>
+                        {% for c in categories %}
+                            <option value="{{ c }}" {% if category_filter == c %}selected{% endif %}>{{ c }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Chart Card -->
+    <div class="col-12 col-md-4 col-lg-6">
+        <div class="card p-3 h-100">
+            <span class="text-muted small text-uppercase">By Category</span>
+            <canvas id="categoryChart" height="140"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- Row 2: Shops Summary -->
+<div class="row g-4 mb-4">
+    <div class="col-12">
+        <div class="card p-3">
+            <span class="text-muted small text-uppercase mb-2">🏪 Shops / Stores</span>
+            <div class="shop-list">
+                {% for shop in shops_summary %}
+                    <a href="{{ url_for('shop_detail', shop_id=shop.id) }}" class="shop-item">
+                        <span class="shop-name">{{ shop.name }}</span>
+                        <span class="shop-stats">₹{{ "%.2f"|format(shop.total) }} ({{ shop.count }} visits)</span>
+                    </a>
+                {% else %}
+                    <p class="text-muted mb-0">No shops added yet. Start by adding expenses with a store name.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Row 3: Quick Add & Expenses -->
+<div class="row g-4">
+    <!-- Quick Add -->
+    <div class="col-12 col-lg-4">
+        <div class="card p-3">
+            <span class="text-muted small text-uppercase mb-2">⚡ Quick Add</span>
+            <div class="d-flex flex-wrap gap-2">
+                <button class="quick-add-btn" data-category="Food" data-amount="50" data-description="Lunch">🍔 ₹50</button>
+                <button class="quick-add-btn" data-category="Transport" data-amount="30" data-description="Auto">🚕 ₹30</button>
+                <button class="quick-add-btn" data-category="Shopping" data-amount="100" data-description="Misc">🛍️ ₹100</button>
+                <button class="quick-add-btn" data-category="Entertainment" data-amount="200" data-description="Movie">🎬 ₹200</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Expenses Table -->
+    <div class="col-12 col-lg-8">
+        <div class="card p-3">
+            <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold mb-0">📋 Expenses</h5>
+                <div class="d-flex gap-2">
+                    <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('export_csv') }}?month={{ month_filter }}&category={{ category_filter }}">📥 Export CSV</a>
+                    <a class="btn btn-primary btn-sm" href="{{ url_for('add_expense') }}">+ Add Expense</a>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                {% if expenses %}
+                <table class="table table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Description</th>
+                            <th>Category</th>
+                            <th>Amount</th>
+                            <th class="text-end">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for e in expenses %}
+                        <tr>
+                            <td>{{ e["entry_date"] }}</td>
+                            <td>{{ e["description"] }}</td>
+                            <td><span class="pill">{{ e["category"] }}</span></td>
+                            <td class="amount-cell">₹{{ "%.2f"|format(e["amount"]) }}</td>
+                            <td class="text-end">
+                                <a href="{{ url_for('edit_expense', expense_id=e['id']) }}" class="btn btn-outline-primary btn-sm me-1">Edit</a>
+                                <form method="post" action="{{ url_for('delete_expense', expense_id=e['id']) }}" onsubmit="return confirm('Delete this expense?');" style="display:inline;">
+                                    <button type="submit" class="btn btn-outline-danger btn-sm">Delete</button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <p class="text-muted text-center py-3">No expenses logged for this filter. <a href="{{ url_for('add_expense') }}">Add one</a>.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript for Chart -->
+<script>
+    window.__lastEntryDate = {{ last_entry_date|tojson }};
+    window.__today = {{ today|tojson }};
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+    fetch("{{ url_for('api_summary') }}?month={{ month_filter }}")
+        .then(r => r.json())
+        .then(data => {
+            const ctx = document.getElementById('categoryChart');
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: data.map(d => d.category),
+                    datasets: [{
+                        data: data.map(d => d.total),
+                        backgroundColor: ['#6366f1','#22c55e','#f59e0b','#ef4444','#06b6d4','#a855f7','#ec4899','#84cc16','#64748b']
+                    }]
+                },
+                options: { 
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: { 
+                        legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } } 
+                    } 
+                }
+            });
+        });
+</script>
+{% endblock %}

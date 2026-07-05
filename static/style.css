@@ -1,0 +1,93 @@
+/* static/style.css */
+:root {
+    --primary-color: #4F46E5;
+}
+
+body {
+    background-color: #f8fafc;
+    font-family: system-ui, -apple-system, sans-serif;
+}
+
+.card {
+    border: none;
+    border-radius: 16px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+    transition: box-shadow 0.2s ease;
+    margin-bottom: 20px;
+}
+
+.card:hover {
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+}
+
+.table th {
+    background-color: #f1f5f9;
+    border-top: none;
+    font-weight: 600;
+    color: #334155;
+}
+
+.table td {
+    vertical-align: middle;
+    padding: 12px 8px;
+}
+
+.pill {
+    background-color: #eef2ff;
+    color: #4F46E5;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.amount-cell {
+    font-weight: 600;
+    color: #0f172a;
+}
+
+.quick-add-btn {
+    background-color: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    border-radius: 30px;
+    padding: 6px 16px;
+    font-size: 0.85rem;
+    transition: all 0.2s;
+}
+
+.quick-add-btn:hover {
+    background-color: #4F46E5;
+    color: white;
+    border-color: #4F46E5;
+    transform: translateY(-2px);
+}
+
+.shop-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    background: white;
+    border-radius: 12px;
+    border: 1px solid #f1f5f9;
+    margin-bottom: 8px;
+    text-decoration: none;
+    color: #0f172a;
+    transition: all 0.2s;
+}
+
+.shop-item:hover {
+    background: #f8fafc;
+    border-color: #4F46E5;
+    transform: translateX(4px);
+}
+
+.shop-name {
+    font-weight: 500;
+}
+
+.shop-stats {
+    font-size: 0.9rem;
+    color: #64748b;
+}
