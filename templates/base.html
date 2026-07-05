@@ -28,6 +28,9 @@
                     </li>
                 </ul>
                 <button id="notif-btn" class="btn btn-outline-primary btn-sm">🔔 Enable Reminders</button>
+                {% if current_user.is_authenticated %}
+    <a href="{{ url_for('logout') }}" class="btn btn-outline-danger btn-sm ms-2">Logout ({{ current_user.username }})</a>
+{% endif %}
             </div>
         </div>
     </nav>
