@@ -385,7 +385,8 @@ def shop_detail(shop_id):
     conn.close()
     return render_template("shop_detail.html", shop=shop, expenses=expenses, weekly_totals=weekly_totals)
 
+
+ init_db()
 if __name__ == "__main__":
-    init_db()
    # app.run(debug=True)
     app.run(host='0.0.0.0', debug=False)
