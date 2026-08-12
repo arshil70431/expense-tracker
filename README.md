@@ -91,7 +91,7 @@ Setup & Run
 Clone the repository:
 
 bash
-git clone https://github.com/yourusername/expense_tracker.git
+git clone https://github.com/arshil70431/expense_tracker.git
 cd expense_tracker
 Create and activate a virtual environment:
 
