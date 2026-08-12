@@ -2,158 +2,288 @@
 {% block title %}Dashboard - Expense Tracker{% endblock %}
 
 {% block content %}
-<!-- Row 1: Total, Filter, Chart -->
-<div class="row g-4 mb-4">
-    <!-- Total Card -->
-    <div class="col-12 col-md-4 col-lg-3">
-        <div class="card p-3 h-100">
-            <div class="card-body text-center">
-                <span class="text-muted small text-uppercase">Total for {{ month_filter }}</span>
-                <h2 class="fw-bold text-primary mt-2">₹{{ "%.2f"|format(total) }}</h2>
-            </div>
-        </div>
-    </div>
+<div class="container-fluid px-0">
 
-    <!-- Filter Card -->
-    <div class="col-12 col-md-4 col-lg-3">
-        <div class="card p-3 h-100">
-            <form method="get" class="d-flex flex-column gap-2">
-                <div>
-                    <label class="form-label fw-semibold mb-1">Month</label>
-                    <input type="month" name="month" value="{{ month_filter }}" class="form-control form-control-sm" onchange="this.form.submit()">
-                </div>
-                <div>
-                    <label class="form-label fw-semibold mb-1">Category</label>
-                    <select name="category" class="form-select form-select-sm" onchange="this.form.submit()">
-                        <option value="All" {% if category_filter == 'All' %}selected{% endif %}>All</option>
-                        {% for c in categories %}
-                            <option value="{{ c }}" {% if category_filter == c %}selected{% endif %}>{{ c }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-            </form>
-        </div>
+  <!-- TOP BAR: Title, Budget, Dark Mode -->
+  <div class="d-flex flex-wrap align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0 fw-bold">📊 Dashboard</h1>
+    <div class="d-flex gap-2 align-items-center">
+      <div class="d-flex align-items-center gap-2">
+        <label for="budget-input" class="fw-semibold text-muted small">Monthly Budget:</label>
+        <input type="number" id="budget-input" class="form-control form-control-sm" style="width:120px;" step="0.01" placeholder="0.00">
+        <button id="set-budget-btn" class="btn btn-sm btn-primary">Set</button>
+      </div>
+      <!-- Dark mode toggle (already in base.html, but we keep it here too) -->
+      
     </div>
+  </div>
 
-    <!-- Chart Card -->
-    <div class="col-12 col-md-4 col-lg-6">
-        <div class="card p-3 h-100">
-            <span class="text-muted small text-uppercase">By Category</span>
-            <canvas id="categoryChart" height="140"></canvas>
-        </div>
+  <!-- KPI CARDS -->
+  <div class="kpi-grid" id="kpi-grid">
+    <div class="kpi-card accent-primary">
+      <div class="kpi-icon">💰</div>
+      <div class="kpi-label">Total Spent</div>
+      <div class="kpi-value" id="kpi-total">₹0.00</div>
     </div>
-</div>
+    <div class="kpi-card accent-success">
+      <div class="kpi-icon">📅</div>
+      <div class="kpi-label">Remaining Budget</div>
+      <div class="kpi-value" id="kpi-remaining">₹0.00</div>
+    </div>
+    <div class="kpi-card accent-warning">
+      <div class="kpi-icon">📈</div>
+      <div class="kpi-label">Daily Average</div>
+      <div class="kpi-value" id="kpi-avg">₹0.00</div>
+    </div>
+    <div class="kpi-card accent-danger">
+      <div class="kpi-icon">🏷️</div>
+      <div class="kpi-label">Top Category</div>
+      <div class="kpi-value" id="kpi-topcat">—</div>
+    </div>
+  </div>
 
-<!-- Row 2: Shops Summary -->
-<div class="row g-4 mb-4">
-    <div class="col-12">
-        <div class="card p-3">
-            <span class="text-muted small text-uppercase mb-2">🏪 Shops / Stores</span>
-            <div class="shop-list">
-                {% for shop in shops_summary %}
-                    <a href="{{ url_for('shop_detail', shop_id=shop.id) }}" class="shop-item">
-                        <span class="shop-name">{{ shop.name }}</span>
-                        <span class="shop-stats">₹{{ "%.2f"|format(shop.total) }} ({{ shop.count }} visits)</span>
+  <!-- FILTERS + EXPORT -->
+  <div class="card mb-4">
+    <div class="card-body d-flex flex-wrap align-items-center gap-3">
+      <form method="GET" action="{{ url_for('index') }}" class="d-flex flex-wrap align-items-center gap-2">
+        <label for="month" class="fw-semibold text-muted small">Month:</label>
+        <input type="month" id="month" name="month" value="{{ month_filter }}" class="form-control form-control-sm" style="width:160px;">
+        <label for="category" class="fw-semibold text-muted small">Category:</label>
+        <select id="category" name="category" class="form-select form-select-sm" style="width:150px;">
+          <option value="All" {% if category_filter == "All" %}selected{% endif %}>All</option>
+          {% for cat in categories %}
+            <option value="{{ cat }}" {% if cat == category_filter %}selected{% endif %}>{{ cat }}</option>
+          {% endfor %}
+        </select>
+        <button type="submit" class="btn btn-sm btn-primary">Filter</button>
+      </form>
+      <div class="ms-auto">
+        <a href="{{ url_for('export_csv', month=month_filter, category=category_filter) }}" class="btn btn-sm btn-outline-success" target="_blank">⬇️ Export CSV</a>
+        <a href="{{ url_for('add_expense') }}" class="btn btn-sm btn-primary">➕ Add Expense</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHARTS ROW -->
+  <div class="row g-4 mb-4">
+    <div class="col-md-6">
+      <div class="card h-100">
+        <div class="card-header">🧩 Category Breakdown</div>
+        <div class="card-body">
+          <div class="chart-container">
+            <canvas id="pieChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="card h-100">
+        <div class="card-header">📉 Daily Spending Trend (Last 7 days)</div>
+        <div class="card-body">
+          <div class="chart-container">
+            <canvas id="barChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- QUICK ADD -->
+  <div class="card mb-4">
+    <div class="card-header">⚡ Quick Add Expense</div>
+    <div class="card-body d-flex flex-wrap gap-2">
+      <button class="quick-add-btn" data-category="Food" data-amount="100" data-description="Lunch">🍔 Food ₹100</button>
+      <button class="quick-add-btn" data-category="Transport" data-amount="50" data-description="Bus fare">🚌 Transport ₹50</button>
+      <button class="quick-add-btn" data-category="Shopping" data-amount="200" data-description="Groceries">🛒 Shopping ₹200</button>
+      <button class="quick-add-btn" data-category="Entertainment" data-amount="150" data-description="Movie">🎬 Entertainment ₹150</button>
+      <button class="quick-add-btn" data-category="Health" data-amount="80" data-description="Medicine">💊 Health ₹80</button>
+      <button class="quick-add-btn" data-category="Other" data-amount="30" data-description="Misc">📦 Other ₹30</button>
+    </div>
+  </div>
+
+  <!-- EXPENSES TABLE -->
+  <div class="card mb-4">
+    <div class="card-header">
+      <span>📋 Expenses</span>
+      <span class="badge bg-primary rounded-pill">{{ expenses|length }}</span>
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Description</th>
+              <th>Category</th>
+              <th>Shop</th>
+              <th class="text-end">Amount</th>
+              <th class="text-center">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% if expenses %}
+              {% for exp in expenses %}
+              <tr>
+                <td>{{ exp.entry_date }}</td>
+                <td>{{ exp.description }}</td>
+                <td><span class="pill">{{ exp.category }}</span></td>
+                <td>
+                  {% if exp.shop_id %}
+                    <a href="{{ url_for('shop_detail', shop_id=exp.shop_id) }}" class="text-decoration-none">
+                      {{ exp.shop_name if exp.shop_name else exp.shop_id }}
                     </a>
-                {% else %}
-                    <p class="text-muted mb-0">No shops added yet. Start by adding expenses with a store name.</p>
-                {% endfor %}
-            </div>
-        </div>
+                  {% else %}
+                    —
+                  {% endif %}
+                </td>
+                <td class="text-end fw-semibold">₹{{ "%.2f"|format(exp.amount) }}</td>
+                <td class="text-center">
+                  <div class="btn-group btn-group-sm">
+                    <a href="{{ url_for('edit_expense', expense_id=exp.id) }}" class="btn btn-outline-secondary">✏️</a>
+                    <form method="POST" action="{{ url_for('delete_expense', expense_id=exp.id) }}" style="display:inline;">
+                      <button type="submit" class="btn btn-outline-danger" onclick="return confirm('Delete this expense?')">🗑️</button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            {% else %}
+              <tr>
+                <td colspan="6" class="text-center text-muted py-4">No expenses found for this period.</td>
+              </tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
     </div>
+  </div>
+
+  <!-- SHOPS SUMMARY -->
+  <div class="card">
+    <div class="card-header">🏪 Shops Summary</div>
+    <div class="card-body">
+      {% if shops_summary %}
+        {% for shop in shops_summary %}
+          <a href="{{ url_for('shop_detail', shop_id=shop.id) }}" class="shop-item">
+            <span class="shop-name">{{ shop.name }}</span>
+            <span class="shop-stats">{{ shop.count }} expenses · ₹{{ "%.2f"|format(shop.total) }}</span>
+          </a>
+        {% endfor %}
+      {% else %}
+        <p class="text-muted text-center my-2">No shops with expenses this month.</p>
+      {% endif %}
+    </div>
+  </div>
+
 </div>
 
-<!-- Row 3: Quick Add & Expenses -->
-<div class="row g-4">
-    <!-- Quick Add -->
-    <div class="col-12 col-lg-4">
-        <div class="card p-3">
-            <span class="text-muted small text-uppercase mb-2">⚡ Quick Add</span>
-            <div class="d-flex flex-wrap gap-2">
-                <button class="quick-add-btn" data-category="Food" data-amount="50" data-description="Lunch">🍔 ₹50</button>
-                <button class="quick-add-btn" data-category="Transport" data-amount="30" data-description="Auto">🚕 ₹30</button>
-                <button class="quick-add-btn" data-category="Shopping" data-amount="100" data-description="Misc">🛍️ ₹100</button>
-                <button class="quick-add-btn" data-category="Entertainment" data-amount="200" data-description="Movie">🎬 ₹200</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Expenses Table -->
-    <div class="col-12 col-lg-8">
-        <div class="card p-3">
-            <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
-                <h5 class="fw-bold mb-0">📋 Expenses</h5>
-                <div class="d-flex gap-2">
-                    <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('export_csv') }}?month={{ month_filter }}&category={{ category_filter }}">📥 Export CSV</a>
-                    <a class="btn btn-primary btn-sm" href="{{ url_for('add_expense') }}">+ Add Expense</a>
-                </div>
-            </div>
-
-            <div class="table-responsive">
-                {% if expenses %}
-                <table class="table table-hover align-middle">
-                    <thead>
-                        <tr>
-                            <th>Date</th>
-                            <th>Description</th>
-                            <th>Category</th>
-                            <th>Amount</th>
-                            <th class="text-end">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                    {% for e in expenses %}
-                        <tr>
-                            <td>{{ e["entry_date"] }}</td>
-                            <td>{{ e["description"] }}</td>
-                            <td><span class="pill">{{ e["category"] }}</span></td>
-                            <td class="amount-cell">₹{{ "%.2f"|format(e["amount"]) }}</td>
-                            <td class="text-end">
-                                <a href="{{ url_for('edit_expense', expense_id=e['id']) }}" class="btn btn-outline-primary btn-sm me-1">Edit</a>
-                                <form method="post" action="{{ url_for('delete_expense', expense_id=e['id']) }}" onsubmit="return confirm('Delete this expense?');" style="display:inline;">
-                                    <button type="submit" class="btn btn-outline-danger btn-sm">Delete</button>
-                                </form>
-                            </td>
-                        </tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
-                {% else %}
-                <p class="text-muted text-center py-3">No expenses logged for this filter. <a href="{{ url_for('add_expense') }}">Add one</a>.</p>
-                {% endif %}
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- JavaScript for Chart -->
+<!-- ===== CHARTS & KPI JAVASCRIPT ===== -->
 <script>
-    window.__lastEntryDate = {{ last_entry_date|tojson }};
-    window.__today = {{ today|tojson }};
-</script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-<script>
-    fetch("{{ url_for('api_summary') }}?month={{ month_filter }}")
-        .then(r => r.json())
-        .then(data => {
-            const ctx = document.getElementById('categoryChart');
-            new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: data.map(d => d.category),
-                    datasets: [{
-                        data: data.map(d => d.total),
-                        backgroundColor: ['#6366f1','#22c55e','#f59e0b','#ef4444','#06b6d4','#a855f7','#ec4899','#84cc16','#64748b']
-                    }]
-                },
-                options: { 
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    plugins: { 
-                        legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } } 
-                    } 
-                }
-            });
-        });
+  (function() {
+    const expenses = {{ expenses|tojson|safe }};
+    const categoryTotals = {{ category_totals|tojson|safe }};
+    const totalSpent = {{ total|default(0) }};
+
+    // ---- 1. Update KPI Cards ----
+    function updateKPI(budget) {
+      const remaining = budget - totalSpent;
+      document.getElementById('kpi-total').textContent = '₹' + totalSpent.toFixed(2);
+      document.getElementById('kpi-remaining').textContent = '₹' + (remaining > 0 ? remaining.toFixed(2) : '0.00');
+      const dates = expenses.map(e => e.entry_date);
+      const uniqueDays = new Set(dates).size;
+      const avg = uniqueDays > 0 ? totalSpent / uniqueDays : 0;
+      document.getElementById('kpi-avg').textContent = '₹' + avg.toFixed(2);
+      if (categoryTotals.length > 0) {
+        document.getElementById('kpi-topcat').textContent = categoryTotals[0].category + ' (₹' + categoryTotals[0].total.toFixed(2) + ')';
+      } else {
+        document.getElementById('kpi-topcat').textContent = '—';
+      }
+    }
+
+    // ---- 2. Budget Management ----
+    const BUDGET_KEY = 'monthly_budget';
+    let currentBudget = parseFloat(localStorage.getItem(BUDGET_KEY)) || 0;
+
+    function setBudget(amount) {
+      currentBudget = amount;
+      localStorage.setItem(BUDGET_KEY, amount);
+      updateKPI(amount);
+    }
+
+    document.getElementById('set-budget-btn').addEventListener('click', function() {
+      const val = parseFloat(document.getElementById('budget-input').value);
+      if (!isNaN(val) && val >= 0) {
+        setBudget(val);
+        alert('Budget set to ₹' + val.toFixed(2));
+      } else {
+        alert('Please enter a valid positive number.');
+      }
+    });
+
+    if (currentBudget > 0) {
+      document.getElementById('budget-input').value = currentBudget;
+      updateKPI(currentBudget);
+    } else {
+      setBudget(5000);
+      document.getElementById('budget-input').value = 5000;
+    }
+
+    // ---- 3. Dark Mode Toggle (already in script.js, but we also have it here for safety) ----
+    // The global script.js will handle dark mode, so we don't need to repeat it here.
+
+    // ---- 4. Charts ----
+    // Pie Chart
+    const pieCtx = document.getElementById('pieChart').getContext('2d');
+    const pieLabels = categoryTotals.map(c => c.category);
+    const pieData = categoryTotals.map(c => c.total);
+    new Chart(pieCtx, {
+      type: 'pie',
+      data: {
+        labels: pieLabels.length ? pieLabels : ['No Data'],
+        datasets: [{
+          data: pieData.length ? pieData : [1],
+          backgroundColor: ['#4F46E5','#22c55e','#f59e0b','#ef4444','#8b5cf6','#ec4899','#06b6d4','#f97316','#64748b'],
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom' } }
+      }
+    });
+
+    // Bar Chart (last 7 days)
+    const today = new Date();
+    const sevenDays = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(today);
+      d.setDate(d.getDate() - i);
+      sevenDays.push(d.toISOString().split('T')[0]);
+    }
+    const dailySums = sevenDays.map(day => {
+      return expenses.filter(e => e.entry_date === day)
+                     .reduce((sum, e) => sum + e.amount, 0);
+    });
+    const barCtx = document.getElementById('barChart').getContext('2d');
+    new Chart(barCtx, {
+      type: 'bar',
+      data: {
+        labels: sevenDays.map(d => d.slice(5)),
+        datasets: [{
+          label: 'Daily Spend',
+          data: dailySums,
+          backgroundColor: '#4F46E5',
+          borderRadius: 6,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true } }
+      }
+    });
+  })();
 </script>
 {% endblock %}

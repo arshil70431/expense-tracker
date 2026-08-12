@@ -1,93 +1,431 @@
-/* static/style.css */
+/* static/style.css - PRO UPGRADE */
+
+/* ============================================
+   1. CSS VARIABLES (Light & Dark Mode)
+   ============================================ */
 :root {
-    --primary-color: #4F46E5;
+    /* Light Theme (Default) */
+    --bg-primary: #f8fafc;
+    --bg-secondary: #ffffff;
+    --bg-card: #ffffff;
+    --text-primary: #0f172a;
+    --text-secondary: #334155;
+    --text-muted: #64748b;
+    --border-color: #e2e8f0;
+    --shadow-sm: 0 2px 12px rgba(0, 0, 0, 0.06);
+    --shadow-md: 0 8px 25px rgba(0, 0, 0, 0.08);
+    --shadow-lg: 0 20px 60px rgba(0, 0, 0, 0.10);
+    --primary: #4F46E5;
+    --primary-light: #eef2ff;
+    --primary-dark: #4338ca;
+    --success: #22c55e;
+    --danger: #ef4444;
+    --warning: #f59e0b;
+    --radius: 16px;
+    --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+[data-theme="dark"] {
+    --bg-primary: #0f172a;
+    --bg-secondary: #1e293b;
+    --bg-card: #1e293b;
+    --text-primary: #f8fafc;
+    --text-secondary: #cbd5e1;
+    --text-muted: #94a3b8;
+    --border-color: #334155;
+    --shadow-sm: 0 2px 12px rgba(0, 0, 0, 0.4);
+    --shadow-md: 0 8px 25px rgba(0, 0, 0, 0.5);
+    --shadow-lg: 0 20px 60px rgba(0, 0, 0, 0.6);
+    --primary-light: #312e81;
+}
+
+/* ============================================
+   2. GLOBAL RESET & BODY
+   ============================================ */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
 }
 
 body {
-    background-color: #f8fafc;
-    font-family: system-ui, -apple-system, sans-serif;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    transition: background-color var(--transition), color var(--transition);
+    line-height: 1.6;
+    padding: 20px;
+    min-height: 100vh;
 }
 
+/* ============================================
+   3. DASHBOARD KPI CARDS
+   ============================================ */
+.kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.kpi-card {
+    background: var(--bg-card);
+    padding: 20px 24px;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-color);
+    transition: all var(--transition);
+    position: relative;
+    overflow: hidden;
+}
+
+.kpi-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-md);
+}
+
+.kpi-card .kpi-label {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-muted);
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.kpi-card .kpi-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1.2;
+}
+
+.kpi-card .kpi-icon {
+    position: absolute;
+    right: 20px;
+    top: 20px;
+    font-size: 1.8rem;
+    opacity: 0.15;
+}
+
+.kpi-card.accent-primary { border-left: 4px solid var(--primary); }
+.kpi-card.accent-success { border-left: 4px solid var(--success); }
+.kpi-card.accent-warning { border-left: 4px solid var(--warning); }
+.kpi-card.accent-danger { border-left: 4px solid var(--danger); }
+
+/* ============================================
+   4. CARDS & CONTAINERS
+   ============================================ */
 .card {
-    border: none;
-    border-radius: 16px;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
-    transition: box-shadow 0.2s ease;
-    margin-bottom: 20px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+    transition: all var(--transition);
+    margin-bottom: 24px;
+    overflow: hidden;
 }
 
 .card:hover {
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+    box-shadow: var(--shadow-md);
+}
+
+.card-header {
+    padding: 18px 24px;
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-color);
+    font-weight: 600;
+    font-size: 1.1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.card-body {
+    padding: 24px;
+}
+
+/* ============================================
+   5. TABLES (Responsive & Dark Mode Friendly)
+   ============================================ */
+.table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.95rem;
 }
 
 .table th {
-    background-color: #f1f5f9;
-    border-top: none;
+    background-color: var(--bg-secondary);
+    color: var(--text-secondary);
     font-weight: 600;
-    color: #334155;
-}
-
-.table td {
-    vertical-align: middle;
-    padding: 12px 8px;
-}
-
-.pill {
-    background-color: #eef2ff;
-    color: #4F46E5;
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-size: 0.8rem;
-    font-weight: 500;
+    padding: 14px 12px;
+    text-align: left;
+    border-bottom: 2px solid var(--border-color);
     white-space: nowrap;
 }
 
-.amount-cell {
-    font-weight: 600;
-    color: #0f172a;
+.table td {
+    padding: 12px 12px;
+    border-bottom: 1px solid var(--border-color);
+    vertical-align: middle;
+    color: var(--text-primary);
 }
 
+.table tr:hover {
+    background-color: var(--bg-secondary);
+}
+
+/* ============================================
+   6. BADGES / PILLS
+   ============================================ */
+.pill {
+    background-color: var(--primary-light);
+    color: var(--primary);
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    white-space: nowrap;
+    display: inline-block;
+}
+
+.pill-success { background: #dcfce7; color: #166534; }
+.pill-danger { background: #fee2e2; color: #991b1b; }
+.pill-warning { background: #fef3c7; color: #92400e; }
+
+[data-theme="dark"] .pill-success { background: #064e3b; color: #86efac; }
+[data-theme="dark"] .pill-danger { background: #7f1d1d; color: #fca5a5; }
+[data-theme="dark"] .pill-warning { background: #78350f; color: #fcd34d; }
+
+/* ============================================
+   7. QUICK ADD BUTTONS
+   ============================================ */
 .quick-add-btn {
-    background-color: #f1f5f9;
-    border: 1px solid #e2e8f0;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
     border-radius: 30px;
-    padding: 6px 16px;
+    padding: 6px 18px;
     font-size: 0.85rem;
-    transition: all 0.2s;
+    font-weight: 500;
+    color: var(--text-secondary);
+    transition: all var(--transition);
+    cursor: pointer;
 }
 
 .quick-add-btn:hover {
-    background-color: #4F46E5;
+    background: var(--primary);
     color: white;
-    border-color: #4F46E5;
+    border-color: var(--primary);
     transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
 }
 
+/* ============================================
+   8. SHOP ITEMS (List View)
+   ============================================ */
 .shop-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 12px 16px;
-    background: white;
+    padding: 14px 18px;
+    background: var(--bg-card);
     border-radius: 12px;
-    border: 1px solid #f1f5f9;
-    margin-bottom: 8px;
+    border: 1px solid var(--border-color);
+    margin-bottom: 10px;
     text-decoration: none;
-    color: #0f172a;
-    transition: all 0.2s;
+    color: var(--text-primary);
+    transition: all var(--transition);
+    cursor: pointer;
 }
 
 .shop-item:hover {
-    background: #f8fafc;
-    border-color: #4F46E5;
-    transform: translateX(4px);
+    background: var(--bg-secondary);
+    border-color: var(--primary);
+    transform: translateX(6px);
+    box-shadow: var(--shadow-sm);
 }
 
 .shop-name {
-    font-weight: 500;
+    font-weight: 600;
 }
-
 .shop-stats {
     font-size: 0.9rem;
-    color: #64748b;
+    color: var(--text-muted);
+}
+
+/* ============================================
+   9. CHART CONTAINERS (Responsive Fix)
+   ============================================ */
+.chart-container {
+    position: relative;
+    height: 300px;
+    width: 100%;
+    margin: 16px 0;
+}
+
+.chart-container canvas {
+    max-width: 100% !important;
+    height: auto !important;
+}
+
+/* ============================================
+   10. FLASH MESSAGES (Toasts)
+   ============================================ */
+.flash {
+    padding: 14px 20px;
+    border-radius: 12px;
+    margin-bottom: 16px;
+    background: var(--bg-card);
+    border-left: 5px solid var(--primary);
+    box-shadow: var(--shadow-sm);
+    color: var(--text-primary);
+    animation: slideDown 0.4s ease;
+    border: 1px solid var(--border-color);
+}
+
+.flash-success { border-left-color: var(--success); }
+.flash-danger { border-left-color: var(--danger); }
+.flash-warning { border-left-color: var(--warning); }
+
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* ============================================
+   11. DARK MODE TOGGLE BUTTON
+   ============================================ */
+.theme-toggle {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 30px;
+    padding: 8px 16px;
+    cursor: pointer;
+    font-size: 1.2rem;
+    transition: all var(--transition);
+    color: var(--text-primary);
+}
+
+.theme-toggle:hover {
+    background: var(--primary);
+    color: white;
+    transform: rotate(15deg);
+}
+
+/* ============================================
+   12. BUDGET INPUT STYLES
+   ============================================ */
+#budget-input {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 4px 8px;
+}
+#set-budget-btn {
+    background: var(--primary);
+    border: none;
+    color: white;
+    padding: 4px 12px;
+    border-radius: 8px;
+    font-weight: 500;
+    transition: var(--transition);
+}
+#set-budget-btn:hover {
+    opacity: 0.8;
+    transform: scale(0.97);
+}
+
+/* ============================================
+   13. RESPONSIVE BREAKPOINTS
+   ============================================ */
+@media (max-width: 768px) {
+    .kpi-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+    .kpi-card .kpi-value {
+        font-size: 1.5rem;
+    }
+    .card-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    .table th, .table td {
+        padding: 10px 8px;
+        font-size: 0.85rem;
+    }
+    .shop-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+    }
+    body {
+        padding: 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    .kpi-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+    }
+    .kpi-card {
+        padding: 14px;
+    }
+    .kpi-card .kpi-value {
+        font-size: 1.2rem;
+    }
+    .quick-add-btn {
+        font-size: 0.75rem;
+        padding: 4px 12px;
+    }
+}
+
+/* Force dark mode compatibility on all elements */
+[data-theme="dark"] .table,
+[data-theme="dark"] .table td,
+[data-theme="dark"] .table th,
+[data-theme="dark"] .card,
+[data-theme="dark"] .card-body,
+[data-theme="dark"] .alert,
+[data-theme="dark"] .form-control,
+[data-theme="dark"] .form-select,
+[data-theme="dark"] .input-group-text,
+[data-theme="dark"] .btn-outline-secondary {
+    background-color: var(--bg-secondary) !important;
+    color: var(--text-primary) !important;
+    border-color: var(--border-color) !important;
+}
+
+[data-theme="dark"] .table-hover tbody tr:hover {
+    background-color: var(--bg-card) !important;
+}
+
+/* Make sure links are visible */
+[data-theme="dark"] a:not(.btn):not(.navbar-brand) {
+    color: var(--primary);
+}
+
+/* Flash messages (alerts) */
+[data-theme="dark"] .alert-success {
+    background-color: #064e3b !important;
+    color: #86efac !important;
+    border-color: #065f46 !important;
+}
+[data-theme="dark"] .alert-danger {
+    background-color: #7f1d1d !important;
+    color: #fca5a5 !important;
+    border-color: #991b1b !important;
+}
+[data-theme="dark"] .alert-warning {
+    background-color: #78350f !important;
+    color: #fcd34d !important;
+    border-color: #92400e !important;
 }

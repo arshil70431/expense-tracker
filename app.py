@@ -6,8 +6,6 @@ Database: SQLite (SQL database, accessed via raw SQL through sqlite3)
 Features: user accounts/login, manual expense entry, notification-based daily
 reminders, category-wise summaries, monthly filtering, edit/delete records,
 shop/store tracking with weekly totals.
-
-Author: Arshil Tamboli
 """
 
 import os
@@ -136,15 +134,19 @@ def signup():
             return render_template("signup.html")
 
         password_hash = generate_password_hash(password)
-        conn.execute(
+        cursor = conn.execute(
             "INSERT INTO users (username, password_hash, created_at) VALUES (?, ?, ?)",
             (username, password_hash, datetime.now().isoformat())
         )
+        new_user_id = cursor.lastrowid
         conn.commit()
         conn.close()
 
-        flash("Account created! Please log in.", "success")
-        return redirect(url_for("login"))
+        # ✅ Auto‑login after signup
+        user = User(new_user_id, username)
+        login_user(user)
+        flash("Account created! Welcome!", "success")
+        return redirect(url_for("index"))
 
     return render_template("signup.html")
 
@@ -185,23 +187,33 @@ def index():
     month_filter = request.args.get("month", date.today().strftime("%Y-%m"))
     category_filter = request.args.get("category", "All")
 
-    query = "SELECT * FROM expenses WHERE entry_date LIKE ? AND user_id = ?"
+    # Join with shops to get shop_name
+    query = """
+        SELECT expenses.*, shops.name as shop_name
+        FROM expenses
+        LEFT JOIN shops ON shops.id = expenses.shop_id
+        WHERE expenses.entry_date LIKE ? AND expenses.user_id = ?
+    """
     params = [f"{month_filter}%", current_user.id]
     if category_filter != "All":
-        query += " AND category = ?"
+        query += " AND expenses.category = ?"
         params.append(category_filter)
-    query += " ORDER BY entry_date DESC, id DESC"
-    expenses = conn.execute(query, params).fetchall()
+    query += " ORDER BY expenses.entry_date DESC, expenses.id DESC"
+    rows = conn.execute(query, params).fetchall()
+
+    # ✅ Convert sqlite3.Row objects to dictionaries for JSON serialization
+    expenses = [dict(row) for row in rows]
 
     total = sum(e["amount"] for e in expenses)
 
-    category_totals = conn.execute("""
+    category_rows = conn.execute("""
         SELECT category, SUM(amount) as total
         FROM expenses
         WHERE entry_date LIKE ? AND user_id = ?
         GROUP BY category
         ORDER BY total DESC
     """, [f"{month_filter}%", current_user.id]).fetchall()
+    category_totals = [dict(row) for row in category_rows]
 
     last_entry = conn.execute(
         "SELECT entry_date FROM expenses WHERE user_id = ? ORDER BY entry_date DESC LIMIT 1",
