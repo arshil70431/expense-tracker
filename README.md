@@ -1,89 +1,114 @@
-# Personal Expense Tracker
+# 💰 Personal Expense Tracker
 
-A personal finance web app built with **Flask** (Python backend routing/logic)
-and a **SQLite** SQL database for recording, managing, and querying daily
-expense data — matching the project description on Arshil Tamboli's resume.
+A full‑featured personal finance web app built with **Flask** (Python) and **SQLite**.  
+It helps you track daily expenses, manage monthly budgets, and visualize spending habits — all with a clean, responsive interface that supports **light/dark mode**.
 
-## Features
+---
 
-- **Manual expense entry** — add expenses with description, category, amount, and date.
-- **Notification-based reminders** — browser notifications remind you to log
-  today's expenses if you haven't yet (uses the Notification API + a
-  `/api/reminder-status` endpoint backed by a SQL query).
-- **SQL-backed dashboard** — monthly totals, category breakdown (doughnut chart),
-  and filtering by month/category, all powered by raw SQL queries against SQLite.
-- **Edit / delete** expenses.
-- Clean, responsive UI — no external framework required beyond Chart.js (loaded via CDN).
+## ✨ Features
 
-## Tech Stack
+- **User authentication** – Sign up and log in (auto‑login after signup).
+- **Expense CRUD** – Add, edit, and delete expenses with description, category, amount, date, and optional store/shop.
+- **Monthly budget** – Set a monthly budget and see remaining amount at a glance.
+- **Interactive charts** – Category breakdown (doughnut chart) and daily spending trend (bar chart) using Chart.js.
+- **Shop/Store tracking** – Attach expenses to shops and view per‑shop summaries and weekly totals.
+- **Quick‑add** – One‑click buttons to add common expenses (Food, Transport, etc.).
+- **CSV export** – Download expense data for any month/category filter.
+- **Daily reminders** – Browser notifications remind you to log expenses if you haven't for the day.
+- **Dark / Light mode** – Toggle themes; your preference is saved in the browser.
+- **Fully responsive** – Works on desktop, tablet, and mobile.
 
-| Layer      | Technology            |
-|------------|------------------------|
-| Backend    | Python, Flask          |
-| Database   | SQLite (SQL)           |
-| Frontend   | HTML, CSS, vanilla JS, Chart.js |
-| Notifications | Browser Notification API |
+---
 
-## Project Structure
+## 🧰 Tech Stack
 
-```
+| Layer          | Technology                          |
+|----------------|--------------------------------------|
+| Backend        | Python, Flask, Flask‑Login           |
+| Database       | SQLite (raw SQL via `sqlite3`)       |
+| Authentication | Werkzeug (password hashing)          |
+| Frontend       | HTML, CSS, vanilla JS, Bootstrap 5   |
+| Charts         | Chart.js (CDN)                       |
+| Notifications  | Browser Notification API             |
+| Environment    | python‑dotenv                        |
+
+---
+
+## 📁 Project Structure
+
 expense_tracker/
-├── app.py                 # Flask app: routes, SQL queries, API endpoints
-├── requirements.txt
+├── app.py # Flask app: routes, SQL queries, API endpoints
+├── requirements.txt # Python dependencies
+├── .env # Environment variables (SECRET_KEY)
+├── expenses.db # SQLite database (auto‑created)
 ├── templates/
-│   ├── base.html           # Layout, nav, notification button
-│   ├── index.html          # Dashboard: totals, chart, expense table
-│   ├── add.html             # Add-expense form
-│   └── edit.html            # Edit-expense form
+│ ├── base.html # Layout, navbar, dark mode toggle, Chart.js
+│ ├── index.html # Dashboard (totals, charts, expense table, shops)
+│ ├── add.html # Add expense form
+│ ├── edit.html # Edit expense form
+│ ├── login.html # Login page
+│ ├── signup.html # Signup page (auto‑login after signup)
+│ └── shop_detail.html # Per‑shop expense history + weekly totals
 └── static/
-    ├── style.css
-    └── script.js            # Notification reminder logic
-```
+├── style.css # Light/dark theme, KPI cards, responsive styles
+└── script.js # Dark mode toggle, budget, reminders, quick‑add
 
-## Setup & Run
 
-1. **Install dependencies** (Python 3.9+ recommended):
-   ```bash
-   cd expense_tracker
-   python -m venv venv
-   source venv/bin/activate      # On Windows: venv\Scripts\activate
-   pip install -r requirements.txt
-   ```
+---
 
-2. **Run the app**:
-   ```bash
-   python app.py
-   ```
-   The SQLite database (`expenses.db`) is created automatically on first run.
-
-3. Open your browser at **http://127.0.0.1:5000**
-
-4. Click **"Enable Reminders"** in the top bar and allow notifications to get
-   a browser reminder if you haven't logged an expense yet today.
-
-## Database Schema
+## 🗄️ Database Schema
 
 ```sql
+-- Users table
+CREATE TABLE users (
+    id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    username      TEXT NOT NULL UNIQUE,
+    password_hash TEXT NOT NULL,
+    created_at    TEXT NOT NULL
+);
+
+-- Shops table
+CREATE TABLE shops (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    name        TEXT NOT NULL,
+    created_at  TEXT NOT NULL,
+    user_id     INTEGER REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- Expenses table
 CREATE TABLE expenses (
     id          INTEGER PRIMARY KEY AUTOINCREMENT,
     description TEXT    NOT NULL,
     category    TEXT    NOT NULL,
     amount      REAL    NOT NULL,
     entry_date  TEXT    NOT NULL,
-    created_at  TEXT    NOT NULL
+    created_at  TEXT    NOT NULL,
+    shop_id     INTEGER REFERENCES shops(id) ON DELETE SET NULL,
+    user_id     INTEGER REFERENCES users(id) ON DELETE CASCADE
 );
-```
 
-## Possible Extensions
+Setup & Run
+Clone the repository:
 
-- Switch to Flask-SQLAlchemy / migrate to Django (as mentioned on the resume)
-  for a larger-scale version.
-- Add user accounts/authentication for multi-user support.
-- Export monthly reports as PDF/CSV.
-- Add budget limits per category with over-budget notifications.
-- Deploy with PostgreSQL for production use.
+bash
+git clone https://github.com/yourusername/expense_tracker.git
+cd expense_tracker
+Create and activate a virtual environment:
 
-## Author
+bash
+python -m venv .venv
+source .venv/bin/activate        # On Windows: .venv\Scripts\activate
+Install dependencies:
 
-Arshil Tamboli — Computer Science undergraduate, backend web development
-and database architecture focus.
+bash
+pip install -r requirements.txt
+Create a .env file (optional – a default secret is used if missing):
+
+text
+SECRET_KEY=your-secret-key-here
+Run the app:
+
+bash
+python app.py
+Open your browser at http://127.0.0.1:5000 and sign up – you’ll be automatically logged in.
+
